@@ -1,0 +1,37 @@
+{
+  "name": "CarePath AI - Predictive Healthcare Continuity",
+  "short_name": "CarePath AI",
+  "description": "AI-Powered Predictive Healthcare Continuity & Patient Recovery Network",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0891b2",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["medical", "health", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Tasks Queue",
+      "url": "/?tab=followup_tasks",
+      "description": "Open coordinator follow-up outreach queue"
+    },
+    {
+      "name": "Care Journeys",
+      "url": "/?tab=care_journeys",
+      "description": "View active patient treatment journeys"
+    }
+  ]
+}
