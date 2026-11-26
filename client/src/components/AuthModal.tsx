@@ -15,7 +15,8 @@ import {
   AlertCircle, 
   Loader2, 
   ArrowRight,
-  HeartPulse
+  HeartPulse,
+  Sparkles
 } from 'lucide-react';
 
 interface AuthModalProps {
@@ -29,7 +30,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose, 
   initialMode = 'login' 
 }) => {
-  const { language, login, register, resetPassword, updatePassword } = useAuth();
+  const { language, login, register, resetPassword, updatePassword, switchPersona } = useAuth();
   const t = translations[language] || translations.en;
 
   const [mode, setMode] = useState<'login' | 'register' | 'forgot' | 'reset'>(initialMode);
@@ -204,6 +205,88 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
+          {/* Quick 1-Click Demo Login */}
+          {mode === 'login' && (
+            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-cyan-50/40 border border-slate-200/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
+                  <span>Instant 1-Click Demo Sign-In</span>
+                </span>
+                <span className="text-[10px] font-bold text-cyan-700 bg-cyan-100/60 px-2 py-0.5 rounded-full border border-cyan-200/60">
+                  Select Persona
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    switchPersona('healthcare_worker');
+                    setSuccessMessage('Welcome! Signed in as Elena Rostova (Care Coordinator).');
+                    setTimeout(() => onClose(), 400);
+                  }}
+                  className="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-cyan-500 hover:shadow-xs text-left transition-all group cursor-pointer"
+                >
+                  <span className="text-xs font-bold text-slate-800 group-hover:text-cyan-700 block truncate">
+                    Elena Rostova, RN
+                  </span>
+                  <span className="text-[10px] text-slate-500 block truncate">Care Coordinator</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    switchPersona('doctor');
+                    setSuccessMessage('Welcome! Signed in as Dr. Sarah Jenkins (Physician).');
+                    setTimeout(() => onClose(), 400);
+                  }}
+                  className="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-blue-500 hover:shadow-xs text-left transition-all group cursor-pointer"
+                >
+                  <span className="text-xs font-bold text-slate-800 group-hover:text-blue-700 block truncate">
+                    Dr. Sarah Jenkins
+                  </span>
+                  <span className="text-[10px] text-slate-500 block truncate">Physician / Specialist</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    switchPersona('facility_administrator');
+                    setSuccessMessage('Welcome! Signed in as Marcus Sterling (Facility Admin).');
+                    setTimeout(() => onClose(), 400);
+                  }}
+                  className="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-teal-500 hover:shadow-xs text-left transition-all group cursor-pointer"
+                >
+                  <span className="text-xs font-bold text-slate-800 group-hover:text-teal-700 block truncate">
+                    Marcus Sterling
+                  </span>
+                  <span className="text-[10px] text-slate-500 block truncate">Facility Admin</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    switchPersona('administrator');
+                    setSuccessMessage('Welcome! Signed in as David Vance (System Admin).');
+                    setTimeout(() => onClose(), 400);
+                  }}
+                  className="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-indigo-500 hover:shadow-xs text-left transition-all group cursor-pointer"
+                >
+                  <span className="text-xs font-bold text-slate-800 group-hover:text-indigo-700 block truncate">
+                    David Vance, MHA
+                  </span>
+                  <span className="text-[10px] text-slate-500 block truncate">System Administrator</span>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-center pt-1">
+                <span className="text-[10px] text-slate-400 font-medium">
+                  — or enter institutional credentials below —
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Registration Fields */}
           {mode === 'register' && (
             <>
@@ -330,6 +413,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {mode === 'login' && (
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Tip: Any password authenticates in institutional demo mode.
+                </p>
+              )}
             </div>
           )}
 

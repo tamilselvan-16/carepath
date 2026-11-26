@@ -62,6 +62,16 @@ export const initialUsers: UserProfile[] = [
     department: 'Patient Navigation',
     phone: '+1-617-555-0204',
     is_active: true,
+  },
+  {
+    id: 'b0000000-0000-0000-0000-000000000005',
+    facility_id: 'a0000000-0000-0000-0000-000000000001',
+    full_name: 'David Vance, MHA',
+    email: 'david.admin@CarePath.local',
+    role: 'system_admin',
+    department: 'Executive Operations',
+    phone: '+1-617-555-0100',
+    is_active: true,
   }
 ];
 
