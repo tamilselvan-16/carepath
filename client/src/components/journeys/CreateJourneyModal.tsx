@@ -85,12 +85,17 @@ export const CreateJourneyModal: React.FC<CreateJourneyModalProps> = ({
         };
       });
 
+      const maxOffset = stages.length > 0 ? Math.max(...stages.map(s => s.offsetDays)) : 90;
+      const expectedDate = new Date(baseDate);
+      expectedDate.setDate(expectedDate.getDate() + maxOffset);
+
       const payload = {
         patient_id: patientId,
         facility_id: facilityId,
         title,
         assigned_coordinator_id: assignedCoordinator,
         start_date: startDate,
+        expected_completion_date: expectedDate.toISOString().split('T')[0],
         stages: computedStages
       };
 
@@ -120,9 +125,9 @@ export const CreateJourneyModal: React.FC<CreateJourneyModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-2xl w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        
+
         {/* Modal Header */}
-        <div className="p-6 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-700 text-white flex justify-between items-start">
+        <div className="p-6 bg-linear-to-r from-cyan-600 via-blue-600 to-indigo-700 text-white flex justify-between items-start">
           <div>
             <div className="flex items-center space-x-2">
               <Route className="w-5 h-5 text-cyan-200" />
@@ -235,8 +240,8 @@ export const CreateJourneyModal: React.FC<CreateJourneyModalProps> = ({
 
             <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
               {stages.map((st, idx) => (
-                <div 
-                  key={idx} 
+                <div
+                  key={idx}
                   className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-between gap-3 text-xs"
                 >
                   <div className="flex items-center space-x-2 flex-1">

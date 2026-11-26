@@ -19,6 +19,10 @@ import { CareActivitiesView } from './components/journeys/CareActivitiesView';
 import { AICareGapIntelligenceView } from './components/dashboards/AICareGapIntelligenceView';
 import { FollowupTasksView } from './components/followups/FollowupTasksView';
 import { ReferralsManagementView } from './components/referrals/ReferralsManagementView';
+import { OutreachScriptCopilot } from './components/innovations/OutreachScriptCopilot';
+import { DoctorClinicalCopilot } from './components/innovations/DoctorClinicalCopilot';
+import { BottleneckHeatmap } from './components/innovations/BottleneckHeatmap';
+import { ComplianceSentinel } from './components/innovations/ComplianceSentinel';
 import {
   HeartPulse,
   ShieldCheck,
@@ -250,7 +254,31 @@ export default function App() {
 
               {/* TAB 1: OVERVIEW */}
               {currentTab === 'overview' && (
-                <OverviewView stats={overviewStats} onNavigateTab={setCurrentTab} />
+                <OverviewView
+                  stats={overviewStats}
+                  onNavigateTab={setCurrentTab}
+                  patients={patients}
+                  pathways={pathways}
+                />
+              )}
+
+              {/* TAB: PERSONA INNOVATIONS */}
+              {currentTab === 'innovations' && (
+                user?.role === 'healthcare_worker' ? (
+                  <OutreachScriptCopilot
+                    patients={patients}
+                    onLogOutreach={() => loadDashboardData()}
+                  />
+                ) : user?.role === 'doctor' ? (
+                  <DoctorClinicalCopilot
+                    patients={patients}
+                    pathways={pathways}
+                  />
+                ) : user?.role === 'facility_administrator' ? (
+                  <BottleneckHeatmap />
+                ) : (
+                  <ComplianceSentinel />
+                )
               )}
 
               {/* TAB 2: PATIENTS (PHASE 3 COMPLETE MANAGEMENT) */}

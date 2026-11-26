@@ -4,15 +4,12 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import numpy as np
 import pandas as pd
+import pickle
+import os
 from datetime import datetime
-try:
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import precision_score, recall_score, f1_score, confusion_matrix
-    SKLEARN_AVAILABLE = True
-except Exception as err:
-    print(f"Notice: scikit-learn Cython modules restricted ({err}). Using robust NumPy predictive engine.")
-    SKLEARN_AVAILABLE = False
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import precision_score, recall_score, f1_score, confusion_matrix
 
 app = FastAPI(
     title="CarePath AI - Care Continuity Predictive Engine",
@@ -71,22 +68,21 @@ FEATURE_NAMES = [
     "days_since_last_activity"
 ]
 
-class CalibratedHeuristicModel:
-    def __init__(self):
-        self.feature_importances_ = np.array([0.15, 0.28, 0.25, 0.08, 0.10, 0.10, 0.04])
-    def predict_proba(self, X):
-        weights = np.array([0.35, 0.75, 0.85, 0.08, 0.40, 0.90, 0.05])
-        bias = -3.2
-        logits = np.dot(X.values, weights) + bias
-        probs = 1.0 / (1.0 + np.exp(-logits))
-        return np.column_stack([1.0 - probs, probs])
-    def predict(self, X):
-        return (self.predict_proba(X)[:, 1] >= 0.50).astype(int)
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "care_gap_rf.pkl")
 
 class CareGapModelManager:
     def __init__(self):
-        self.model: Optional[Any] = None
+        self.model: Optional[RandomForestClassifier] = None
         self.metrics: Optional[ModelMetrics] = None
+        if os.path.exists(MODEL_PATH):
+            try:
+                with open(MODEL_PATH, "rb") as f:
+                    saved = pickle.load(f)
+                self.model = saved["model"]
+                self.metrics = saved["metrics"]
+                return
+            except Exception:
+                pass
         self.train_model()
 
     def generate_synthetic_data(self, n_samples: int = 1500) -> pd.DataFrame:
@@ -133,20 +129,7 @@ class CareGapModelManager:
         return df
 
     def train_model(self):
-        if not SKLEARN_AVAILABLE:
-            self.model = CalibratedHeuristicModel()
-            self.metrics = ModelMetrics(
-                precision=0.742,
-                recall=0.718,
-                f1_score=0.730,
-                confusion_matrix=[[280, 52], [41, 197]],
-                train_samples_count=1350,
-                test_samples_count=450,
-                validation_strategy="Calibrated Operational Model & Patient-stratified split"
-            )
-            return
-
-        df = self.generate_synthetic_data(1800)
+        df = self.generate_synthetic_data(6000)
         
         # Split by unique patient_id to prevent data leakage across train/test
         unique_patients = df["patient_id"].unique()
@@ -161,11 +144,14 @@ class CareGapModelManager:
         y_test = test_df["gap_occurred_7d"]
 
         rf = RandomForestClassifier(
-            n_estimators=100,
-            max_depth=6,
-            min_samples_split=8,
+            n_estimators=300,
+            max_depth=10,
+            min_samples_split=6,
+            min_samples_leaf=2,
+            max_features="sqrt",
+            n_jobs=-1,
             random_state=42,
-            class_weight="balanced"
+            class_weight="balanced_subsample"
         )
         rf.fit(X_train, y_train)
 
@@ -186,6 +172,8 @@ class CareGapModelManager:
             test_samples_count=len(X_test),
             validation_strategy="Patient-stratified train/test split (no patient leakage)"
         )
+        with open(MODEL_PATH, "wb") as f:
+            pickle.dump({"model": self.model, "metrics": self.metrics}, f)
 
 model_manager = CareGapModelManager()
 
@@ -208,6 +196,12 @@ def get_model_metrics():
     """Returns evaluation metrics: Precision, Recall, F1, and Confusion Matrix"""
     if not model_manager.metrics:
         raise HTTPException(status_code=500, detail="Model metrics unavailable")
+    return model_manager.metrics
+
+@app.post("/model/retrain", response_model=ModelMetrics)
+def retrain_model():
+    """Retrains the Random Forest model and persists it to disk"""
+    model_manager.train_model()
     return model_manager.metrics
 
 @app.post("/predict/gap-7d", response_model=GapPredictionResponse)

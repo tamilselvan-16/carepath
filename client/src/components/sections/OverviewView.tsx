@@ -1,5 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { OverviewStats } from '../../types/dashboard';
+import type { Patient, PatientPathway } from '../../types';
+import { useAuth } from '../../context/AuthContext';
+import { OutreachScriptCopilot } from '../innovations/OutreachScriptCopilot';
+import { DoctorClinicalCopilot } from '../innovations/DoctorClinicalCopilot';
+import { BottleneckHeatmap } from '../innovations/BottleneckHeatmap';
+import { ComplianceSentinel } from '../innovations/ComplianceSentinel';
 import {
   Users,
   Route,
@@ -11,7 +17,10 @@ import {
   TrendingUp,
   Activity,
   ArrowUpRight,
-  Clock
+  Clock,
+  Sparkles,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import {
   AreaChart,
@@ -28,9 +37,12 @@ import {
 interface OverviewViewProps {
   stats: OverviewStats | null;
   onNavigateTab: (tab: any) => void;
+  patients?: Patient[];
+  pathways?: PatientPathway[];
 }
 
-export const OverviewView: React.FC<OverviewViewProps> = ({ stats, onNavigateTab }) => {
+export const OverviewView: React.FC<OverviewViewProps> = ({ stats, onNavigateTab, patients = [], pathways = [] }) => {
+  const [showInnovationModule, setShowInnovationModule] = useState(true);
   // Graceful fallback metrics so dashboard loads instantly even if API request is pending
   const fallbackStats: OverviewStats = {
     totalRegisteredPatients: 3,
@@ -69,30 +81,177 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ stats, onNavigateTab
     ]
   };
 
+  const { user } = useAuth();
   const activeStats = stats || fallbackStats;
+
+  const roleConfig: Record<string, { title: string; subtitle: string; ctaLabel: string; ctaTab: string; badge: string }> = {
+    healthcare_worker: {
+      title: 'Field Outreach & Care Continuity Workspace',
+      subtitle: `You have ${activeStats.pendingFollowupTasks} pending outreach tasks and ${activeStats.pendingActivities} care activities requiring follow-up.`,
+      ctaLabel: 'Open Follow-up Queue',
+      ctaTab: 'followup_tasks',
+      badge: 'Care Coordinator View'
+    },
+    doctor: {
+      title: 'Clinical Supervision & Specialist Referral Console',
+      subtitle: `Supervising ${activeStats.activeCareJourneys} active care journeys with ${activeStats.overdueReferrals} overdue specialist referrals.`,
+      ctaLabel: 'Review Care Journeys',
+      ctaTab: 'care_journeys',
+      badge: 'Physician View'
+    },
+    facility_administrator: {
+      title: 'Facility Operations & Escalation Command Center',
+      subtitle: `Facility Continuity Index: ${activeStats.facilityContinuityIndex}% • ${activeStats.highPriorityCareGaps + activeStats.criticalCareGaps} care-gap alerts active.`,
+      ctaLabel: 'Open Facility Reports',
+      ctaTab: 'reports',
+      badge: 'Facility Admin View'
+    },
+    administrator: {
+      title: 'Enterprise Multi-Facility Governance & Analytics',
+      subtitle: `Monitoring ${activeStats.totalRegisteredPatients} enrolled patients across participating hospital networks.`,
+      ctaLabel: 'Enterprise Analytics',
+      ctaTab: 'reports',
+      badge: 'System Admin View'
+    }
+  };
+
+  const currentRoleInfo = roleConfig[user?.role || 'healthcare_worker'] || roleConfig.healthcare_worker;
 
   return (
     <div className="space-y-6">
 
-      {/* Top Protocol Notice */}
+      {/* Role-Specific Protocol Notice */}
       <div className="p-4 rounded-2xl bg-linear-to-r from-blue-500/10 via-cyan-500/10 to-teal-500/10 border border-cyan-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-xl bg-cyan-600 text-white flex items-center justify-center shrink-0 shadow-xs">
             <Activity className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-slate-900 dark:text-white">Active Continuity Protocol Supervision</h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Continuity Index: <strong className="text-cyan-600 dark:text-cyan-400">{activeStats.facilityContinuityIndex}%</strong> across St. Jude Metropolitan & Highland Valley networks.
+            <div className="flex items-center space-x-2">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white">{currentRoleInfo.title}</h3>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
+                {currentRoleInfo.badge}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              {currentRoleInfo.subtitle}
             </p>
           </div>
         </div>
 
         <div className="flex items-center space-x-2">
+          <button
+            onClick={() => onNavigateTab(currentRoleInfo.ctaTab)}
+            className="px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-[11px] font-bold transition-colors"
+          >
+            {currentRoleInfo.ctaLabel}
+          </button>
           <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300/30">
             Synthetic Demo Data Labelled
           </span>
         </div>
+      </div>
+
+      {/* Role-Specific Quick Modules */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {(user?.role === 'healthcare_worker' ? [
+          { title: 'Outreach & Follow-up Queue', desc: 'Log phone/SMS/home-visit attempts & record patient barriers', tab: 'followup_tasks', badge: `${activeStats.pendingFollowupTasks} Pending` },
+          { title: 'Care Activities & Labs', desc: 'Update milestone statuses and upload supporting documents', tab: 'care_activities', badge: `${activeStats.pendingActivities} Due` },
+          { title: 'Patient Intake & QR Cards', desc: 'Register new patients and print physical continuity cards', tab: 'patients', badge: 'Intake' }
+        ] : user?.role === 'doctor' ? [
+          { title: 'Clinical Care Journeys', desc: 'Supervise 8-stage treatment pathways and recovery milestones', tab: 'care_journeys', badge: `${activeStats.activeCareJourneys} Active` },
+          { title: 'Specialist Referrals', desc: 'Create, track, and verify inter-facility specialist transfers', tab: 'referrals', badge: `${activeStats.overdueReferrals} Overdue` },
+          { title: 'AI Care-Gap Reviews', desc: 'Review ML 7-day predictions & Gemini clinical summaries', tab: 'ai_care_gaps', badge: `${activeStats.highPriorityCareGaps + activeStats.criticalCareGaps} Alerts` }
+        ] : user?.role === 'facility_administrator' ? [
+          { title: 'Facility Quality Reports', desc: 'Benchmark continuity rates and export CSV/PDF compliance reports', tab: 'reports', badge: `${activeStats.facilityContinuityIndex}% Index` },
+          { title: 'Staff & Facility Settings', desc: 'Manage clinical personnel roles and facility audit logs', tab: 'settings', badge: 'Admin' },
+          { title: 'Escalated Referrals', desc: 'Monitor delayed referrals and supervisor barrier escalations', tab: 'referrals', badge: `${activeStats.overdueReferrals} Delayed` }
+        ] : [
+          { title: 'Enterprise Analytics', desc: 'Cross-facility performance benchmarks and CSV/PDF exports', tab: 'reports', badge: 'Global' },
+          { title: 'Multi-Facility & User Admin', desc: 'Register hospital sites, assign RBAC roles, and view audit logs', tab: 'settings', badge: 'System' },
+          { title: 'Network Patient Registry', desc: 'Oversee enrolled patients across all participating facilities', tab: 'patients', badge: `${activeStats.totalRegisteredPatients} Total` }
+        ]).map((mod, idx) => (
+          <div
+            key={idx}
+            onClick={() => onNavigateTab(mod.tab)}
+            className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-cyan-500/50 shadow-xs hover:shadow-md cursor-pointer transition-all flex flex-col justify-between"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">{mod.title}</h4>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 shrink-0">
+                {mod.badge}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">{mod.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Role-Specific Innovation Spotlight */}
+      <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-indigo-500/5 p-5 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-cyan-600/30">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-600 text-white">
+                  Next-Gen Innovation
+                </span>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  {user?.role === 'healthcare_worker'
+                    ? 'AI Multilingual Voice & Outreach Script Copilot'
+                    : user?.role === 'doctor'
+                    ? 'AI Clinical Trajectory & Counter-Referral Copilot'
+                    : user?.role === 'facility_administrator'
+                    ? 'Predictive Capacity & Bottleneck Forecasting Simulator'
+                    : 'AI Network Continuity & HIPAA Security Sentinel'}
+                </h3>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {user?.role === 'healthcare_worker'
+                  ? 'Generate empathetic phone talking points and 1-click WhatsApp/SMS scripts in 8 regional languages.'
+                  : user?.role === 'doctor'
+                  ? 'Supervise pathway adherence intervals, flag missed biomarkers, and draft counter-referral briefs.'
+                  : user?.role === 'facility_administrator'
+                  ? 'Predict department overload 14 days out and simulate resource additions to resolve care gaps.'
+                  : 'Real-time behavioral audit anomaly detection, regional equity benchmarks, and model latency metrics.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 shrink-0">
+            <button
+              onClick={() => setShowInnovationModule(!showInnovationModule)}
+              className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-cyan-500 flex items-center space-x-1.5 transition-all"
+            >
+              <span>{showInnovationModule ? 'Collapse Tool' : 'Open Interactive Tool'}</span>
+              {showInnovationModule ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={() => onNavigateTab('innovations')}
+              className="px-3.5 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold shadow-xs transition-all flex items-center space-x-1"
+            >
+              <span>Full Screen</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {showInnovationModule && (
+          <div className="pt-2 animate-fadeIn">
+            {user?.role === 'healthcare_worker' ? (
+              <OutreachScriptCopilot patients={patients} />
+            ) : user?.role === 'doctor' ? (
+              <DoctorClinicalCopilot patients={patients} pathways={pathways} />
+            ) : user?.role === 'facility_administrator' ? (
+              <BottleneckHeatmap />
+            ) : (
+              <ComplianceSentinel />
+            )}
+          </div>
+        )}
       </div>
 
       {/* 7 Required Phase 2 Statistic KPI Cards */}

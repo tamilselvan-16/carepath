@@ -1,5 +1,6 @@
 export type DashboardTab = 
   | 'overview'
+  | 'innovations'
   | 'patients'
   | 'care_journeys'
   | 'care_activities'

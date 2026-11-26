@@ -15,7 +15,8 @@ import {
   Settings,
   HeartPulse,
   X,
-  Shield
+  Shield,
+  Sparkles
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -36,6 +37,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { user, language } = useAuth();
   const t = translations[language] || translations.en;
 
+  const innovationLabel = user?.role === 'healthcare_worker'
+    ? 'AI Outreach Copilot'
+    : user?.role === 'doctor'
+    ? 'Clinical Journey Copilot'
+    : user?.role === 'facility_administrator'
+    ? 'Capacity Forecast'
+    : 'Security Sentinel';
+
   const navigationItems: {
     id: DashboardTab;
     label: string;
@@ -44,12 +53,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     roles?: string[];
   }[] = [
       { id: 'overview', label: t.navOverview, icon: LayoutDashboard },
+      { id: 'innovations', label: innovationLabel, icon: Sparkles, badge: 1 },
       { id: 'patients', label: t.navPatients, icon: Users },
-      { id: 'care_journeys', label: t.navCareJourneys, icon: Route },
-      { id: 'care_activities', label: t.navCareActivities, icon: CalendarCheck2 },
-      { id: 'referrals', label: t.navReferrals, icon: Share2 },
-      { id: 'ai_care_gaps', label: t.navCareGapIntelligence, icon: BrainCircuit, badge: 2 },
-      { id: 'followup_tasks', label: t.navFollowupTasks, icon: CheckSquare },
+      { id: 'care_journeys', label: t.navCareJourneys, icon: Route, roles: ['healthcare_worker', 'doctor', 'facility_administrator'] },
+      { id: 'care_activities', label: t.navCareActivities, icon: CalendarCheck2, roles: ['healthcare_worker', 'doctor'] },
+      { id: 'referrals', label: t.navReferrals, icon: Share2, roles: ['doctor', 'facility_administrator', 'administrator'] },
+      { id: 'ai_care_gaps', label: t.navCareGapIntelligence, icon: BrainCircuit, badge: 2, roles: ['healthcare_worker', 'doctor', 'facility_administrator'] },
+      { id: 'followup_tasks', label: t.navFollowupTasks, icon: CheckSquare, roles: ['healthcare_worker', 'facility_administrator'] },
       { id: 'notifications', label: t.navNotifications, icon: Bell, badge: unreadNotifsCount },
       { id: 'reports', label: t.navReports, icon: BarChart3, roles: ['administrator', 'facility_administrator', 'doctor'] },
       { id: 'settings', label: t.navSettings, icon: Settings },

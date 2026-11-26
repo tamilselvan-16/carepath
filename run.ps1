@@ -6,17 +6,17 @@ Write-Host "==================================================================="
 $root = $PSScriptRoot
 
 Write-Host "`n[1/3] Launching Python ML Service on Port 8000..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "cd '$root\ml-service'; & '$root\.venv\Scripts\python.exe' -m uvicorn main:app --port 8000 --host 127.0.0.1"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$root\ml-service'; python -m uvicorn main:app --port 8000 --host 127.0.0.1"
 
 Start-Sleep -Seconds 2
 
 Write-Host "[2/3] Launching Node.js Backend Server on Port 5000..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "cd '$root\server'; npm.cmd run dev"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$root\server'; npm run dev"
 
 Start-Sleep -Seconds 2
 
 Write-Host "[3/3] Launching React Vite Frontend Client on Port 3000..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "cd '$root\client'; npm.cmd run dev"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$root\client'; npm run dev -- --host"
 
 Start-Sleep -Seconds 3
 

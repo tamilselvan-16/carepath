@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Wifi, 
-  WifiOff, 
-  RefreshCw, 
-  CheckCircle2, 
-  AlertTriangle, 
-  X, 
-  Layers, 
+import {
+  Wifi,
+  WifiOff,
+  RefreshCw,
+  CheckCircle2,
+  AlertTriangle,
+  X,
+  Layers,
   ShieldCheck
 } from 'lucide-react';
 import { getPendingOperations, updateOperationStatus, dismissOperation, type OfflineOperation } from '../../services/offlineQueue';
@@ -186,9 +186,9 @@ export const SyncIndicator: React.FC<SyncIndicatorProps> = ({ token, onSyncCompl
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            
+
             {/* Modal Header */}
-            <div className="p-5 bg-gradient-to-r from-cyan-700 to-blue-700 text-white flex justify-between items-start">
+            <div className="p-5 bg-linear-to-r from-cyan-700 to-blue-700 text-white flex justify-between items-start">
               <div>
                 <div className="flex items-center space-x-2">
                   <Layers className="w-5 h-5 text-cyan-200" />
@@ -204,7 +204,7 @@ export const SyncIndicator: React.FC<SyncIndicatorProps> = ({ token, onSyncCompl
             </div>
 
             <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-              
+
               {/* Connection Status Card */}
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
                 <div>
@@ -246,19 +246,17 @@ export const SyncIndicator: React.FC<SyncIndicatorProps> = ({ token, onSyncCompl
                     {pendingOps.map((op) => (
                       <div
                         key={op.operation_id}
-                        className={`p-3 rounded-xl border text-xs space-y-1.5 ${
-                          op.status === 'conflict'
+                        className={`p-3 rounded-xl border text-xs space-y-1.5 ${op.status === 'conflict'
                             ? 'bg-red-50 dark:bg-red-950/40 border-red-300 dark:border-red-800'
                             : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700'
-                        }`}
+                          }`}
                       >
                         <div className="flex justify-between items-start">
                           <span className="font-bold text-slate-800 dark:text-slate-200 font-mono text-[11px]">
                             {op.action_type}
                           </span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                            op.status === 'conflict' ? 'bg-red-200 text-red-900' : 'bg-blue-100 text-blue-800'
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${op.status === 'conflict' ? 'bg-red-200 text-red-900' : 'bg-blue-100 text-blue-800'
+                            }`}>
                             {op.status}
                           </span>
                         </div>

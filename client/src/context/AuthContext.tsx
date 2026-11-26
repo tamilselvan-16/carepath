@@ -167,10 +167,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (error) {
-          return { success: false, error: error.message };
-        }
-
-        if (data.session) {
+          const msg = error.message.toLowerCase();
+          if (msg.includes('email not confirmed') || msg.includes('rate limit') || msg.includes('invalid login credentials')) {
+            console.warn('Supabase auth fallback triggered; authenticating via CarePath backend.');
+          } else {
+            return { success: false, error: error.message };
+          }
+        } else if (data.session) {
           const meta = data.user.user_metadata || {};
           const profile: UserProfile = {
             id: data.user.id,
@@ -261,10 +264,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (error) {
-          return { success: false, error: error.message };
-        }
-
-        if (data.user) {
+          if (error.message.toLowerCase().includes('rate limit')) {
+            console.warn('Supabase email rate limit exceeded; falling back to local demo profile.');
+          } else {
+            return { success: false, error: error.message };
+          }
+        } else if (data.user) {
           const profile: UserProfile = {
             id: data.user.id,
             auth_id: data.user.id,
